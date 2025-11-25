@@ -2,7 +2,7 @@
  * @Author: FunctionSir
  * @License: AGPLv3
  * @Date: 2025-09-21 10:58:22
- * @LastEditTime: 2025-11-25 21:06:09
+ * @LastEditTime: 2025-11-25 23:15:15
  * @LastEditors: FunctionSir
  * @Description: -
  * @FilePath: /roxytunnel/core/client/client.go
@@ -30,6 +30,7 @@ import (
 	"github.com/songgao/water"
 	"github.com/tink-crypto/tink-go/v2/aead/subtle"
 	"github.com/tink-crypto/tink-go/v2/tink"
+	_ "modernc.org/sqlite"
 )
 
 // Related HTTP headers
@@ -386,20 +387,34 @@ func (client *RoxyClient) Connect() error {
 	// Set disconnect once.
 	client.disconnectOnce = sync.Once{}
 
-	// Get auth method.
-	var authMethod, authPayload string
-	err := shared.GetConfVal(client.linkCtx, client.dbConn, shared.ConfKeyClientAuthMethod, &authMethod)
+	// // Get auth method.
+	// var authMethod, authPayload string
+	// err := shared.GetConfVal(client.linkCtx, client.dbConn, shared.ConfKeyClientAuthMethod, &authMethod)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// // Check if auth method is supported or not.
+	// if shared.RoxyAuthMethod(authMethod) != shared.AuthMethodBearer { // Currently, AuthMethodBearer is the only supported one
+	// 	return shared.ErrAuthMethodNotSupported
+	// }
+
+	// // Get auth payload.
+	// err = shared.GetConfVal(client.linkCtx, client.dbConn, shared.ConfKeyClientAuthPayload, &authPayload)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// Get anti-replay related values from Memo.
+	var curNextEpoch uint32
+	var curNextSeq uint64
+	// TODO: Finish memo keys.
+	err := shared.GetMemoVal(client.linkCtx, client.dbConn, "", &curNextEpoch)
 	if err != nil {
 		return err
 	}
-
-	// Check if auth method is supported or not.
-	if shared.RoxyAuthMethod(authMethod) != shared.AuthMethodBearer { // Currently, AuthMethodBearer is the only supported one
-		return shared.ErrAuthMethodNotSupported
-	}
-
-	// Get auth payload.
-	err = shared.GetConfVal(client.linkCtx, client.dbConn, shared.ConfKeyClientAuthPayload, &authPayload)
+	// TODO: Finish memo keys.
+	err = shared.GetMemoVal(client.linkCtx, client.dbConn, "", &curNextSeq)
 	if err != nil {
 		return err
 	}
@@ -511,10 +526,7 @@ func (client *RoxyClient) Connect() error {
 	base64NoiseIKInit := base64.RawURLEncoding.EncodeToString(noiseIKInit)
 
 	// Construct HTTP header.
-	header, err := shared.NewHeaderWithBearer(authPayload)
-	if err != nil {
-		return err
-	}
+	header := make(http.Header)
 	header.Add(HTTPHeaderXNoiseInit, base64NoiseIKInit)
 	if headersLenRandPadMax > 0 {
 		header.Add(HTTPHeaderXPadding, paddingStr)

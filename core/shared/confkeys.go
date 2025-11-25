@@ -2,11 +2,12 @@
  * @Author: FunctionSir
  * @License: AGPLv3
  * @Date: 2025-09-21 16:41:19
- * @LastEditTime: 2025-11-24 20:34:14
+ * @LastEditTime: 2025-11-25 23:19:16
  * @LastEditors: FunctionSir
  * @Description: -
  * @FilePath: /roxytunnel/core/shared/confkeys.go
  */
+
 package shared
 
 // Official config keys for Roxy Tunnel
