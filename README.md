@@ -2,13 +2,15 @@
  * @Author: FunctionSir
  * @License: AGPLv3
  * @Date: 2025-09-18 22:25:36
- * @LastEditTime: 2025-11-24 23:14:07
+ * @LastEditTime: 2026-01-21 17:17:09
  * @LastEditors: FunctionSir
  * @Description: -
  * @FilePath: /roxytunnel/README.md
 -->
 
-# Roxy Tunnel
+# Roxy Tunnel (Now MOVED to tina)
+
+This repo is not active and kept as a memo. Active development continues at tina. **New repo: <https://github.com/FunctionSir/tina>**
 
 Roxy Tunnel, a VPN system based on Resilient Obfuscated eXchange roxY (Roxy) Protocol.
 
@@ -17,6 +19,20 @@ So, what is Roxy? Oh, it's "Resilient Obfuscated eXchange roxY".
 But what is Roxy, the last word? Oh, it's "Resilient Obfuscated eXchange roxY"...
 
 Roxy Tunnel will be the bachelor's graduation project of me, I will welcome suggestions and feedback, PRs may not be merged during the development phase. Thank you.
+
+## Now MOVED to tina (SPROUT)
+
+The story is, the name of Roxy comes from an anime girl, but it's a kind of "love at first sight"... Tina Sprout, who is another anime girl, accompanied me for a really long period of time. And I have four plush dolphins (they might be even older than me...)!
+
+So, I'll do these following mappings:
+
+1. ROXY the protocol -> SPROUT Protocol: Secure Protocol for Resilient Obfuscated Universal Tunnel.
+2. roxy the implemention -> tina: Tunnel In a Nutshell Adapters.
+3. Griseo RH -> DOLPHINS: Defense using Order Ledger and Protection Helper using Incremental Nums System/Scheme.
+
+This repo will remain as a memo.
+
+**New repo: <https://github.com/FunctionSir/tina>**
 
 ## About the protocol
 

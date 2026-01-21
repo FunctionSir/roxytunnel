@@ -2,7 +2,7 @@
  * @Author: FunctionSir
  * @License: AGPLv3
  * @Date: 2025-09-21 10:58:22
- * @LastEditTime: 2025-11-25 23:15:15
+ * @LastEditTime: 2025-11-27 21:08:41
  * @LastEditors: FunctionSir
  * @Description: -
  * @FilePath: /roxytunnel/core/client/client.go
@@ -31,13 +31,6 @@ import (
 	"github.com/tink-crypto/tink-go/v2/aead/subtle"
 	"github.com/tink-crypto/tink-go/v2/tink"
 	_ "modernc.org/sqlite"
-)
-
-// Related HTTP headers
-const (
-	HTTPHeaderXPadding   string = "X-Padding"
-	HTTPHeaderXNoiseInit string = "X-Noise-Init"
-	HTTPHeaderXNoiseResp string = "X-Noise-Resp"
 )
 
 // HKDF related
@@ -387,34 +380,20 @@ func (client *RoxyClient) Connect() error {
 	// Set disconnect once.
 	client.disconnectOnce = sync.Once{}
 
-	// // Get auth method.
-	// var authMethod, authPayload string
-	// err := shared.GetConfVal(client.linkCtx, client.dbConn, shared.ConfKeyClientAuthMethod, &authMethod)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// // Check if auth method is supported or not.
-	// if shared.RoxyAuthMethod(authMethod) != shared.AuthMethodBearer { // Currently, AuthMethodBearer is the only supported one
-	// 	return shared.ErrAuthMethodNotSupported
-	// }
-
-	// // Get auth payload.
-	// err = shared.GetConfVal(client.linkCtx, client.dbConn, shared.ConfKeyClientAuthPayload, &authPayload)
-	// if err != nil {
-	// 	return err
-	// }
-
 	// Get anti-replay related values from Memo.
 	var curNextEpoch uint32
 	var curNextSeq uint64
-	// TODO: Finish memo keys.
-	err := shared.GetMemoVal(client.linkCtx, client.dbConn, "", &curNextEpoch)
+	err := shared.GetMemoVal(client.linkCtx, client.dbConn, shared.MemoKeyClientSessionNextEpoch, &curNextEpoch)
 	if err != nil {
 		return err
 	}
-	// TODO: Finish memo keys.
-	err = shared.GetMemoVal(client.linkCtx, client.dbConn, "", &curNextSeq)
+	err = shared.GetMemoVal(client.linkCtx, client.dbConn, shared.MemoKeyClientSessionNextSeq, &curNextSeq)
+	if err != nil {
+		return err
+	}
+
+	// Construct anti-replay generator.
+	antiReplayGen, err := shared.NewAntiReplayGeneratorWithStart(curNextEpoch, curNextSeq, 0)
 	if err != nil {
 		return err
 	}
@@ -504,7 +483,7 @@ func (client *RoxyClient) Connect() error {
 		PeerStatic:            serverNoisePubKey,
 		Random:                rand.Reader,
 		PresharedKey:          noisePSK,
-		PresharedKeyPlacement: 2, // Use psk2 to get a better forward security performance.
+		PresharedKeyPlacement: 2, // Use PSK2 to get a better forward security performance.
 	}
 	hs, err := noise.NewHandshakeState(noiseConf)
 	if err != nil {
@@ -516,7 +495,11 @@ func (client *RoxyClient) Connect() error {
 	_, _ = rand.Read(clientSideSessionSalt) // As Go official said, it's safe to not check the n or err val.
 
 	// Construct Noise IK init and encode it.
-	noiseIKInit, csC2S, csS2C, err := hs.WriteMessage(nil, clientSideSessionSalt) // Payload is client side session salt
+	data, _, err := antiReplayGen.NextAttachToData(clientSideSessionSalt)
+	if err != nil {
+		return err
+	}
+	noiseIKInit, csC2S, csS2C, err := hs.WriteMessage(nil, data) // Payload is anti-replay header and client side session salt
 	if err != nil {
 		return err
 	}
@@ -527,9 +510,9 @@ func (client *RoxyClient) Connect() error {
 
 	// Construct HTTP header.
 	header := make(http.Header)
-	header.Add(HTTPHeaderXNoiseInit, base64NoiseIKInit)
+	header.Add(shared.HTTPHeaderXNoiseInit, base64NoiseIKInit)
 	if headersLenRandPadMax > 0 {
-		header.Add(HTTPHeaderXPadding, paddingStr)
+		header.Add(shared.HTTPHeaderXPadding, paddingStr)
 	}
 
 	// Get TLS cert verification config.
@@ -618,6 +601,32 @@ func (client *RoxyClient) Connect() error {
 		return err
 	}
 
+	// Get new anti-replay related vals.
+	newNextEpoch, newNextSeq, _ := antiReplayGen.State()
+
+	// Start a new transaction. It's important to keep ACID here.
+	tx, err := client.dbConn.BeginTx(client.linkCtx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	// Set related memos.
+	err = shared.SetMemoValTx(client.linkCtx, tx, shared.MemoKeyClientSessionNextEpoch, newNextEpoch)
+	if err != nil {
+		return err
+	}
+	err = shared.SetMemoValTx(client.linkCtx, tx, shared.MemoKeyClientSessionNextSeq, newNextSeq)
+	if err != nil {
+		return err
+	}
+
+	// Commit transaction.
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
 	// Dial WebSocket.
 	wsConn, resp, err := websocket.Dial(client.linkCtx, server, &dialOptions)
 	if err != nil {
@@ -625,7 +634,7 @@ func (client *RoxyClient) Connect() error {
 	}
 
 	// Get Noise response from server and decode it.
-	base64NoiseResp := resp.Header.Get(HTTPHeaderXNoiseResp)
+	base64NoiseResp := resp.Header.Get(shared.HTTPHeaderXNoiseResp)
 	noiseResp, err := base64.RawURLEncoding.DecodeString(base64NoiseResp)
 	if err != nil {
 		return err

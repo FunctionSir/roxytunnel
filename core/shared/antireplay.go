@@ -159,6 +159,7 @@ func NewAntiReplayGeneratorWithStart(nextEpoch uint32, nextSeq uint64, keyRotati
 	return generator, nil
 }
 
+// Returns generator.nextEpoch, generator.nextSeq, generator.keyRotationInterval.
 func (generator *AntiReplayGenerator) State() (uint32, uint64, uint64) {
 	generator.mu.Lock()
 	defer generator.mu.Unlock()

@@ -2,7 +2,7 @@
  * @Author: FunctionSir
  * @License: AGPLv3
  * @Date: 2025-09-21 16:41:19
- * @LastEditTime: 2025-11-25 23:19:16
+ * @LastEditTime: 2025-11-27 21:48:04
  * @LastEditors: FunctionSir
  * @Description: -
  * @FilePath: /roxytunnel/core/shared/confkeys.go
@@ -36,18 +36,21 @@ const (
 
 // Server side config keys
 const (
-	ConfKeyServerListen                string = "server.listen"                  // Example: "127.0.0.1:8443"
-	ConfKeyServerTransport             string = "server.transport"               // Currently, value should be "wss" only
-	ConfKeyServerTLSCert               string = "server.tls.cert"                // Value is Base64 encoded cert data (PEM format)
-	ConfKeyServerTLSKey                string = "server.tls.key"                 // Value is Base64 encoded cert key data (PEM format)
-	ConfKeyServerAuthType              string = "server.auth.type"               // Example: "bearer"
-	ConfKeyServerEntryPath             string = "server.entry_path"              // Example: "/a702a023-d435-481f-83ab-7563c978e5ac"
-	ConfKeyServerAuthOnFailAction      string = "server.auth.on_fail.action"     // Example: "meek"
-	ConfKeyServerAuthOnFailArgs        string = "server.auth.on_fail.args"       // Example: "nginx.403"
-	ConfKeyServerInboundProcessorPath  string = "server.processor.inbound.path"  // Example: "/opt/demoprocessor"
-	ConfKeyServerInboundProcessorArgs  string = "server.processor.inbound.args"  // Example: "-in"
-	ConfKeyServerOutboundProcessorPath string = "server.processor.outbound.path" // Example: "/opt/demoprocessor"
-	ConfKeyServerOutboundProcessorArgs string = "server.processor.outbound.args" // Example: "-out"
+	ConfKeyServerListen                string = "server.listen"                   // Example: "127.0.0.1:8443"
+	ConfKeyServerTransport             string = "server.transport"                // Currently, value should be "wss" only
+	ConfKeyServerTLSCert               string = "server.tls.cert"                 // Value is Base64 encoded cert data (PEM format)
+	ConfKeyServerTLSKey                string = "server.tls.key"                  // Value is Base64 encoded cert key data (PEM format)
+	ConfKeyServerAuthType              string = "server.auth.type"                // Example: "bearer"
+	ConfKeyServerEntryPath             string = "server.entry_path"               // Example: "/a702a023-d435-481f-83ab-7563c978e5ac"
+	ConfKeyServerAuthOnFailAction      string = "server.auth.on_fail.action"      // Example: "meek"
+	ConfKeyServerAuthOnFailArgs        string = "server.auth.on_fail.args"        // Example: "nginx.403"
+	ConfKeyServerNoisePSK              string = "server.noise.psk"                // Value is Base64 encoded Noise PSK for post-quantum security
+	ConfKeyServerNoiseServerPublicKey  string = "server.noise.server.public_key"  // Value is Base64 encoded Noise public key of server
+	ConfKeyServerNoiseServerPrivateKey string = "server.noise.server.private_key" // Value is Base64 encoded Noise private key of server
+	ConfKeyServerInboundProcessorPath  string = "server.processor.inbound.path"   // Example: "/opt/demoprocessor"
+	ConfKeyServerInboundProcessorArgs  string = "server.processor.inbound.args"   // Example: "-in"
+	ConfKeyServerOutboundProcessorPath string = "server.processor.outbound.path"  // Example: "/opt/demoprocessor"
+	ConfKeyServerOutboundProcessorArgs string = "server.processor.outbound.args"  // Example: "-out"
 )
 
 // Nuke related config keys
